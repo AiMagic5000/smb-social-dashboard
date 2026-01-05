@@ -56,11 +56,35 @@ export const PostModal: React.FC<PostModalProps> = ({
     youtube: 'https://www.youtube.com/@StartMyBusinessInc'
   };
 
-  // Placeholder image - shows explanation that real images populate when live
+  // Get image URL based on post status
   const getImageUrl = () => {
-    if (post.imageUrl) return post.imageUrl;
-    // Show placeholder indicating real image will populate from live post
-    return `https://placehold.co/1080x1920/1e293b/94a3b8?text=${encodeURIComponent('AI-Generated Image\\n\\nWill populate from\\nlive post when\\npublished\\n\\n🤖 Powered by fal.ai')}`;
+    // If post has a real image URL from GitHub, use it
+    if (post.imageUrl && post.imageUrl.includes('github')) {
+      return post.imageUrl;
+    }
+
+    // Check if post is in the future (scheduled)
+    const postDate = new Date(post.scheduledDate);
+    const now = new Date();
+    const isScheduled = post.status === 'scheduled' || postDate > now;
+
+    if (isScheduled) {
+      // Placeholder for scheduled/future posts
+      const platformColor = post.platform === 'youtube' ? 'dc2626' : 'e4405f';
+      const contentType = post.platform === 'youtube' ? 'Video Short' : 'Image';
+      return `https://placehold.co/1080x1920/${platformColor}/ffffff?text=${encodeURIComponent(
+        `AI-Generated ${contentType}\n\n` +
+        `This content will be\n` +
+        `generated & posted on:\n\n` +
+        `${postDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}\n` +
+        `at ${post.scheduledTime === 'AM' ? '10:00 AM' : '2:00 PM'}\n\n` +
+        `Powered by fal.ai`
+      )}`;
+    }
+
+    // For posted content, try GitHub image
+    const dateStr = postDate.toISOString().split('T')[0];
+    return `https://raw.githubusercontent.com/AiMagic5000/smb-social-images/main/${post.platform}/${dateStr}-${post.id}.png`;
   };
 
   // Get the correct social URL based on platform
